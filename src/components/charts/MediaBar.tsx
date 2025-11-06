@@ -21,6 +21,22 @@ export const MediaBar: React.FC<MediaBarProps> = ({
   title = "Media Performance",
   description = "Articles and engagement by media source" 
 }) => {
+  if (!Array.isArray(data) || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            No data available
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>

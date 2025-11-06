@@ -17,53 +17,20 @@ import {
   MessageSquare,
   ExternalLink 
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { searchAPI } from '@/lib/api';
 
-const searchResults = [
-  {
-    id: 1,
-    title: 'Pramono Anung Resmi Dilantik Sebagai Gubernur DKI Jakarta',
-    source: 'Kompas.com',
-    date: '2024-11-05',
-    sentiment: 'Positive',
-    engagement: 1247,
-    excerpt: 'Pramono Anung resmi dilantik sebagai Gubernur DKI Jakarta periode 2024-2029 dalam upacara yang dihadiri berbagai tokoh...',
-    url: '#',
-    category: 'Politics'
-  },
-  {
-    id: 2,
-    title: 'Program Makan Gratis Akan Dimulai Januari 2025',
-    source: 'Detik.com',
-    date: '2024-11-04',
-    sentiment: 'Positive',
-    engagement: 956,
-    excerpt: 'Gubernur terpilih DKI Jakarta menjanjikan program makan gratis untuk warga akan segera dimulai pada Januari 2025...',
-    url: '#',
-    category: 'Policy'
-  },
-  {
-    id: 3,
-    title: 'Transportasi Jakarta Perlu Integrasi Lebih Baik',
-    source: 'CNN Indonesia',
-    date: '2024-11-03',
-    sentiment: 'Neutral',
-    engagement: 743,
-    excerpt: 'Pakar transportasi menyoroti perlunya integrasi yang lebih baik antara berbagai moda transportasi di Jakarta...',
-    url: '#',
-    category: 'Infrastructure'
-  },
-  {
-    id: 4,
-    title: 'Visi Smart City Jakarta 2030',
-    source: 'Tempo.co',
-    date: '2024-11-02',
-    sentiment: 'Positive',
-    engagement: 634,
-    excerpt: 'Jakarta menargetkan menjadi smart city pada 2030 dengan berbagai inovasi teknologi dan digitalisasi layanan publik...',
-    url: '#',
-    category: 'Technology'
-  },
-];
+interface SearchResult {
+  id: number;
+  title: string;
+  source: string;
+  date: string;
+  sentiment: string;
+  engagement: number;
+  excerpt: string;
+  url: string;
+  category: string;
+}
 
 const searchTrendData = [
   { date: '1', articles: 15, engagement: 22 },
@@ -82,6 +49,20 @@ export default function ExplorerPage() {
     sentiment: 'all',
     source: 'all',
     category: 'all'
+  });
+
+  const { data: searchResults, isLoading, error } = useQuery({
+    queryKey: ['search', searchQuery, selectedFilters],
+    queryFn: () => searchAPI.search({
+      query: searchQuery || undefined,
+      start_date: selectedFilters.dateRange === '7d' ? '2024-10-30' : selectedFilters.dateRange === '30d' ? '2024-10-07' : undefined,
+      end_date: '2024-11-06',
+      sentiment: selectedFilters.sentiment !== 'all' ? selectedFilters.sentiment as 'positif' | 'negatif' | 'netral' : undefined,
+      sources: selectedFilters.source !== 'all' ? selectedFilters.source : undefined,
+      page_size: 20
+    }),
+    enabled: !!searchQuery || Object.values(selectedFilters).some(v => v !== 'all' && v !== '7d'),
+    select: (data) => (data.data || []) as SearchResult[]
   });
 
   return (
@@ -256,7 +237,7 @@ export default function ExplorerPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {searchResults.map((result) => (
+            {(searchResults || []).map((result: SearchResult) => (
               <div key={result.id} className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
